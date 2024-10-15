@@ -1,0 +1,15 @@
+---
+title: "p8105_hw3_mnw2132"
+author: "Mary Williams"
+date: "10-16-2024"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_libraries}
+library(tidyverse)
+library(readxl)
+```
