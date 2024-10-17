@@ -23,7 +23,6 @@ data("ny_noaa")
 
 When looking at the data with: 
 ```{r}
-str(ny_noaa)
 summary(ny_noaa)
 sum(is.na(ny_noaa))
 ```
@@ -59,32 +58,31 @@ group_by(snow) %>%
 ```
 The most common snowfall values were "0" with 2008508 and "NA" with 381221. This is likely because it does not snow often, especially in some of the locations observed. 
 
-# Max temperature for January and July
+
+### Problem 2
 ```{r}
-cleaned_noaa %>%
-  mutate(
-    month = as.integer(month)) %>%
-    filter(month %in% c(-01, -07)) %>%
-  ggplot(aes(x = year, y = tmax, color = id)) +
-  geom_point() +
-  labs(title = "Max Temp in January and July",
-       x = "Year",
-       y = "Max temp (C)")
-
-
-unique(cleaned_noaa$month)
-unique(cleaned_noaa$day)
-
-cleaned_noaa %>%
-  mutate(
-    date = as.Date(date),  # Ensure date is in Date format
-    month = as.integer(format(date, "%m"))  # Extract month as integer
-  ) %>%
-  filter(month %in% c(1, 7)) %>%  # Filter for January and July
-  ggplot(aes(x = year, y = tmax, color = id)) +
-  geom_point() +
-  labs(title = "Max Temp in January and July",
-       x = "Year",
-       y = "Max temp (°C)")
-
+MIMS_demographic <- read_csv("data/nhanes_covar.csv",
+skip = 4, col_names = TRUE) %>%
+drop_na()
 ```
+
+```{r}
+MIMS_accel <- read_csv("data/nhanes_accel.csv")
+merged_data <- merge(MIMS_demographic, MIMS_accel, by = "SEQN")
+```
+  
+```{r}
+clean_data <- merged_data %>%
+  janitor::clean_names() %>%
+  filter(age >= 21) %>%
+  mutate(sex = 
+  case_when(
+    sex == "Male"~1, sex == "Female"~2), 
+  education = case_when(
+    education == "Less than high school" ~ 1,
+    education == "High school equivalent" ~ 2,
+    education == "More than high school" ~ 3))
+```
+
+
+
