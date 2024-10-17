@@ -60,18 +60,16 @@ The most common snowfall values were "0" with 2008508 and "NA" with 381221. This
 
 
 ### Problem 2
-```{r}
+```{r_load csv}
 MIMS_demographic <- read_csv("data/nhanes_covar.csv",
 skip = 4, col_names = TRUE) %>%
 drop_na()
-```
 
-```{r}
 MIMS_accel <- read_csv("data/nhanes_accel.csv")
 merged_data <- merge(MIMS_demographic, MIMS_accel, by = "SEQN")
 ```
   
-```{r}
+```{r_merge and clean data}
 clean_data <- merged_data %>%
    janitor::clean_names() %>%
   filter(age >= 21) %>%
@@ -84,20 +82,73 @@ clean_data <- merged_data %>%
 # 3x2 table
 ```{r}
 table <- clean_data %>%
-   janitor::tabyl(education, sex) %>%
- rename(Education = education)
+   janitor::tabyl(education, sex)
+```
 
+```{r}
 table
 ```
-The below table shows the number of Male and Females there are in every education level. 
+The above table shows the number of Male and Females there are in every education level. 
 
-```
 This table shows that there were 
-# Age Visutalization
+# Age Visualization
 ```{r}
   ggplot(clean_data, aes(x = sex, y = age)) + 
     geom_boxplot() +
-  facet_grid(.~education)  +         
-  viridis::scale_fill_viridis()  
-
+  facet_grid(.~education)  +    
+  labs(title = "Age Distribution by Sex and Education Level",   
+       x = "Sex",                                               
+       y = "Age (Years)")
 ```
+
+The above boxplot shows the distribution of ages for sex and education level, including medians, quartiles, min and max. 
+
+# Aggregate minutes for each participant 
+```{r}
+clean_data$total_MIMs <- rowSums(clean_data[, grepl("^min", names(clean_data))])
+```
+
+# ggplot for total activity 
+```{r}
+ggplot(clean_data, aes(x = age, y = total_MIMs, color = sex)) + 
+    geom_point(alpha = .5) +
+    geom_smooth(se = FALSE) +
+    facet_grid(. ~ education) + 
+    labs(title = "Total Activity vs Age by Sex and Education Level",
+         x = "Age (Years)",
+         y = "Total Activity (MIMs/1440 minutes)",
+         color = "Sex") +
+viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal() + 
+  theme(legend.position = "bottom")
+```
+The plot above demonstrates the differences in total activity for men vs women in 3 different education levels as their age increased. It can be seen that while MIMs decrease with age for every education level, the fluctuations in MIMs throughout the years is similar for men versus women. However, the overall fluctuations are different for each education level. 
+
+# 3 panel plot for 24 hr activity
+```{r}
+data_with_means <- clean_data %>%
+    group_by(education, sex) %>%
+  summarize(across(min1:min1440, ~ mean(.x, na.rm = TRUE), .names = "mean_{col}"))
+
+data_long <- data_with_means %>%
+  pivot_longer(cols = starts_with("mean_min"), 
+               names_to = "time", 
+               values_to = "mean_activity") %>%
+  mutate(time = as.numeric(gsub("mean_min", "", time)))
+
+ggplot(data_long, aes(x = time/60, y = mean_activity, color = sex)) + 
+  geom_point(alpha = .2) +
+  facet_grid(. ~ education) +
+  labs(
+    title = "24-hour Activity Time Course by Education Level",
+    x = "Time of Day (Hours)",
+    y = "Mean MIMs per minute",
+    color = "Sex"
+  ) +
+  viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal() +
+  scale_x_continuous(limits = c(0, 24)) + 
+  geom_smooth(se = TRUE)
+```
+For all education levels and sexes, there's a common distribution, with a minimum mean MIM around 4am and a maximum peak between 10am and 8pm (20 hrs). However there is variation between the education levels and between the males and females in each education level. 
+
