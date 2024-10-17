@@ -60,7 +60,8 @@ The most common snowfall values were "0" with 2008508 and "NA" with 381221. This
 
 
 ### Problem 2
-```{r_load csv}
+# Load csv
+```{r}
 MIMS_demographic <- read_csv("data/nhanes_covar.csv",
 skip = 4, col_names = TRUE) %>%
 drop_na()
@@ -68,8 +69,9 @@ drop_na()
 MIMS_accel <- read_csv("data/nhanes_accel.csv")
 merged_data <- merge(MIMS_demographic, MIMS_accel, by = "SEQN")
 ```
-  
-```{r_merge and clean data}
+
+#Merge and clean data
+```{r}
 clean_data <- merged_data %>%
    janitor::clean_names() %>%
   filter(age >= 21) %>%
@@ -82,10 +84,8 @@ clean_data <- merged_data %>%
 # 3x2 table
 ```{r}
 table <- clean_data %>%
-   janitor::tabyl(education, sex)
-```
+   janitor::tabyl(education, sex) %>%
 
-```{r}
 table
 ```
 The above table shows the number of Male and Females there are in every education level. 
@@ -151,4 +151,27 @@ ggplot(data_long, aes(x = time/60, y = mean_activity, color = sex)) +
   geom_smooth(se = TRUE)
 ```
 For all education levels and sexes, there's a common distribution, with a minimum mean MIM around 4am and a maximum peak between 10am and 8pm (20 hrs). However there is variation between the education levels and between the males and females in each education level. 
+
+
+###Question 3
+```{r}
+Jan_2020 <- read_csv("data/Jan 2020 Citi.csv")
+July_2020 <- read_csv("data/July 2020 Citi.csv")
+Jan_2024 <- read_csv("data/Jan 2024 Citi.csv")
+July_2024 <- read_csv("data/July 2024 Citi.csv")
+
+all_data <- bind_rows(Jan_2020, July_2020, Jan_2024, July_2024)
+
+```
+
+
+
+bike_data <- list.files("data/citibike")
+month_names <- c("2020-Jan", "2020-July", "2024-Jan","2024-July",")
+
+monthly_citibike <- lapply(1:4, function(i){
+  print(month_names[i])
+  data <- read_csv(paste0("data/citibike/", bike_data_files[i])) %>%
+  mutate(period = months_names[i])
+})
 
