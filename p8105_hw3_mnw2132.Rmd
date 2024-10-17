@@ -73,16 +73,31 @@ merged_data <- merge(MIMS_demographic, MIMS_accel, by = "SEQN")
   
 ```{r}
 clean_data <- merged_data %>%
-  janitor::clean_names() %>%
+   janitor::clean_names() %>%
   filter(age >= 21) %>%
-  mutate(sex = 
-  case_when(
-    sex == "Male"~1, sex == "Female"~2), 
-  education = case_when(
-    education == "Less than high school" ~ 1,
-    education == "High school equivalent" ~ 2,
-    education == "More than high school" ~ 3))
+  mutate(
+    sex = factor(sex, levels = c(1, 2), 
+      labels = c("Male", "Female")),
+    education = factor(education, levels = c(1, 2, 3), 
+      labels = c("Less than high school", "High school equivalent", "More than high school")))
 ```
+# 3x2 table
+```{r}
+table <- clean_data %>%
+   janitor::tabyl(education, sex) %>%
+ rename(Education = education)
 
+table
+```
+The below table shows the number of Male and Females there are in every education level. 
 
+```
+This table shows that there were 
+# Age Visutalization
+```{r}
+  ggplot(clean_data, aes(x = sex, y = age)) + 
+    geom_boxplot() +
+  facet_grid(.~education)  +         
+  viridis::scale_fill_viridis()  
 
+```
