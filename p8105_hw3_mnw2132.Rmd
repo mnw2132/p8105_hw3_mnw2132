@@ -154,24 +154,73 @@ For all education levels and sexes, there's a common distribution, with a minimu
 
 
 ###Question 3
+# Merge data
 ```{r}
 Jan_2020 <- read_csv("data/Jan 2020 Citi.csv")
 July_2020 <- read_csv("data/July 2020 Citi.csv")
 Jan_2024 <- read_csv("data/Jan 2024 Citi.csv")
 July_2024 <- read_csv("data/July 2024 Citi.csv")
 
-all_data <- bind_rows(Jan_2020, July_2020, Jan_2024, July_2024)
+citi_bike_data <- bind_rows(
+  Jan_2020 %>% mutate(month = "January", year = 2020),
+  July_2020 %>% mutate(month = "July", year = 2020),
+  Jan_2024 %>% mutate(month = "January", year = 2024),
+  July_2024 %>% mutate(month = "July", year = 2024)
+)
 
+summary(Jan_2020)
+summary(Jan_2024)
+summary(July_2020)
+summary(July_2024)
 ```
 
+#Clean and merge data
+```{r}
+clean_jan_2020 <- Jan_2020 %>%
+  mutate(
+    year = 2020,
+    month = "January",
+    duration = as.numeric(duration),  # Ensure duration is numeric
+    rideable_type = as.factor(rideable_type),
+    member_casual = as.factor(member_casual)
+  )
 
+clean_july_2020 <- July_2020 %>%
+  mutate(
+    year = 2020,
+    month = "July",
+    duration = as.numeric(duration),
+    rideable_type = as.factor(rideable_type),
+    member_casual = as.factor(member_casual)
+  )
 
-bike_data <- list.files("data/citibike")
-month_names <- c("2020-Jan", "2020-July", "2024-Jan","2024-July",")
+clean_jan_2024 <- Jan_2024 %>%
+  mutate(
+    year = 2024,
+    month = "January",
+    duration = as.numeric(duration),
+    rideable_type = as.factor(rideable_type),
+    member_casual = as.factor(member_casual)
+  )
 
-monthly_citibike <- lapply(1:4, function(i){
-  print(month_names[i])
-  data <- read_csv(paste0("data/citibike/", bike_data_files[i])) %>%
-  mutate(period = months_names[i])
-})
+clean_july_2024 <- July_2024 %>%
+  mutate(
+    year = 2024,
+    month = "July",
+    duration = as.numeric(duration),
+    rideable_type = as.factor(rideable_type),
+    member_casual = as.factor(member_casual)
+  )
+
+citi_bike_data <- bind_rows(clean_jan_2020, clean_july_2020, clean_jan_2024, clean_july_2024)
+
+citi_bike_data
+```
+
+#Total number
+```{r}
+rides_summary <- citi_bike_data %>%
+  group_by(year, month, member_casual) %>%
+  summarize(total_rides = n())
+```
 
