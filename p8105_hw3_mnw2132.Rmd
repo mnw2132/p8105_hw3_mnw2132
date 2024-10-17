@@ -11,6 +11,7 @@ knitr::opts_chunk$set(collapse = TRUE, message = FALSE)
 
 ```{r load_libraries}
 library(tidyverse)
+library(ggplot2)
 ```
 
 ### Problem 1
@@ -33,10 +34,10 @@ there are 2,595,176 rows with 7 variables including id, date, prcp, snow, snwd, 
 ```{r  clean_data}
 cleaned_noaa = ny_noaa %>%
   janitor::clean_names() %>%
-  separate("date", into = c("year", "month", "day"), sep = "4") %>%
+  separate("date", into = c("year", "month", "day"), sep = "3") %>%
    mutate(
     tmin = as.numeric(tmin),
-    tmax = as.numeric(tmax), 
+    tmax = as.numeric(tmax),
     prcp = prcp / 10,
     tmax = tmax / 10,
     tmin = tmin / 10
@@ -45,7 +46,10 @@ cleaned_noaa = ny_noaa %>%
 # Checking cleaned data 
 ```{r}
 summary(cleaned_noaa)
+str(cleaned_noaa)
+cleaned_noaa
 ```
+
 # Most common observed snowfall values
 ```{r common_observed_snowfall}
 cleaned_noaa %>%
@@ -55,4 +59,32 @@ group_by(snow) %>%
 ```
 The most common snowfall values were "0" with 2008508 and "NA" with 381221. This is likely because it does not snow often, especially in some of the locations observed. 
 
+# Max temperature for January and July
+```{r}
+cleaned_noaa %>%
+  mutate(
+    month = as.integer(month)) %>%
+    filter(month %in% c(-01, -07)) %>%
+  ggplot(aes(x = year, y = tmax, color = id)) +
+  geom_point() +
+  labs(title = "Max Temp in January and July",
+       x = "Year",
+       y = "Max temp (C)")
 
+
+unique(cleaned_noaa$month)
+unique(cleaned_noaa$day)
+
+cleaned_noaa %>%
+  mutate(
+    date = as.Date(date),  # Ensure date is in Date format
+    month = as.integer(format(date, "%m"))  # Extract month as integer
+  ) %>%
+  filter(month %in% c(1, 7)) %>%  # Filter for January and July
+  ggplot(aes(x = year, y = tmax, color = id)) +
+  geom_point() +
+  labs(title = "Max Temp in January and July",
+       x = "Year",
+       y = "Max temp (°C)")
+
+```
