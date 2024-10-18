@@ -219,10 +219,14 @@ citi_bike_data
 
 ### Total number
 ```{r}
-rides_summary <- citi_bike_data %>%
+summary_table <- citi_bike_data %>%
   group_by(year, month, member_casual) %>%
-  summarize(total_rides = n())
-rides_summary
+  summarize(total_rides = n(), .groups = "drop") %>%
+  
+pivot_wider(names_from = member_casual, values_from = total_rides, 
+    names_prefix = "rides_")
+
+print(summary_table)
 ```
 
 ### Most popular stations in July 2024
@@ -237,4 +241,43 @@ popular_July2014
 ```
 The most popular stations in July 2014 was 1) Pier 61 at Chelsea Piers 2) University Pl & E 14 St 3) W 21 St & 6 Ave 4) West St & Chambers St and 5) W 31 St & 7 Ave. 
 
+### Find median ride duration 
+```{r}
+median_data <- citi_bike_data %>%
+  group_by(year, month, weekdays) %>%
+  summarize(median_duration = median(duration, na.rm = TRUE))
+```
 
+### Plot median 
+```{r}
+ggplot(median_data, aes(x = weekdays, y = median_duration)) +
+  geom_boxplot() +
+  facet_grid(~month) +
+  labs(
+    title = "Median Ride Duration by Day of the Week, Month, and Year",
+    x = "Day of the Week",
+    y = "Median Ride Duration (Minutes)",
+    fill = "Year"
+  ) +
+  viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal()
+```
+The boxplot shows the median of the information and shows the overall distribution if median ride duration according to month  and day of the week. 
+
+### 2024 data
+```{r}
+ggplot(citi_bike_data %>% 
+filter(year == 2024), 
+aes(x = month, y = duration, fill = member_casual)) +
+  geom_violin() +
+    facet_grid(~rideable_type) +
+  labs(
+    title = "Ride Duration in 2024 by Month, Membership Status, and Bike Type",
+    x = "Month",
+    y = "Ride Duration (Minutes)",
+    fill = "Membership Status"
+  ) +
+    viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal()
+```
+The violin plot shows the distributions of the ride duration according to month, different types of bikes and membership status. 
