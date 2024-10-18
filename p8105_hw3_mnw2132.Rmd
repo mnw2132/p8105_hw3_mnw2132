@@ -33,8 +33,11 @@ there are 2,595,176 rows with 7 variables including id, date, prcp, snow, snwd, 
 ```{r  clean_data}
 cleaned_noaa = ny_noaa %>%
   janitor::clean_names() %>%
-  separate("date", into = c("year", "month", "day"), sep = "3") %>%
+  mutate(date = as.Date(date)) %>% 
    mutate(
+    month = month(date),
+    year = year(date),
+    day = day(date),
     tmin = as.numeric(tmin),
     tmax = as.numeric(tmax),
     prcp = prcp / 10,
@@ -46,7 +49,6 @@ cleaned_noaa = ny_noaa %>%
 ```{r}
 summary(cleaned_noaa)
 str(cleaned_noaa)
-cleaned_noaa
 ```
 
 ### Most common observed snowfall values
@@ -58,6 +60,48 @@ group_by(snow) %>%
 ```
 The most common snowfall values were "0" with 2008508 and "NA" with 381221. This is likely because it does not snow often, especially in some of the locations observed. 
 
+### Create a 2 panel plot for January and July 
+```{r}
+avg_temp <- cleaned_noaa %>%
+  filter(month %in% c(1, 7)) %>%
+  group_by(year, month) %>%
+  summarise(avg_tmax = mean(tmax, na.rm = TRUE), .groups = 'drop') %>%
+  mutate(month = factor(month, levels = c(1, 7), labels = c("January", "July")))
+```
+
+```{r}
+  ggplot(avg_temp, aes(x = year, y = avg_tmax)) +
+  geom_line() +
+  facet_wrap(~ month, scales = "free_y") +
+  labs(title = "Average Max Temperature in January and July",
+       x = "Year", y = "Average Max Temperature (C)") +
+    viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal()
+```
+According to the highest average max temperatures in January in 1990 and around 2006, and lowest temps in 1994 and 2004. Meanwhile the higherght temps in July were in the years of 1999 and 2010, and the lowest temperatures were 1992 and 2000. 
+
+### Tmax vs tmins
+```{r}
+  ggplot(na.omit(cleaned_noaa) %>%
+    filter(!is.na(tmax) & !is.na(tmin)),
+    aes(x = tmax, y = tmin, color= id)) +
+  geom_hex(alpha = 0.5, show.legend = FALSE) +
+  labs(title = "Max Temp vs Min Temp") +
+  viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal()
+```
+
+```{r}
+  ggplot(data= cleaned_noaa %>%
+  filter(snow > 0 & snow < 100),
+  aes(x = factor(year), y = snow, fill = id)) +
+  geom_boxplot(show.legend = FALSE) + 
+  labs(title = "Snowfall Distribution by Year", 
+       x = "Year", 
+       y = "Snowfall Amount") +
+  viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal()
+```
 
 # Problem 2
 ### Load csv
@@ -214,7 +258,7 @@ clean_july_2024 <- July_2024 %>%
 
 citi_bike_data <- bind_rows(clean_jan_2020, clean_july_2020, clean_jan_2024, clean_july_2024)
 
-citi_bike_data
+print(citi_bike_data)
 ```
 
 ### Total number
